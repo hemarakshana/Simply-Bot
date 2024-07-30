@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimplyBot</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background: linear-gradient(170deg, #40e0d0, #f369ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+        }
+        #chatContainer {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            width: 80%;
+            max-width: 600px;
+        }
+        #chatForm {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+        #message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #response {
+            margin-top: 20px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            max-height: 100%;
+            max-width: 100%;
+            overflow-y: auto;
+
+        }
+        .user-message {
+            color: #f369ff; 
+            margin: 5px 0;
+        }
+        .bot-message {
+            color: #40e0d0;
+            margin: 5px 0;
+        }
+        /* Add styles for the loading screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #loadingMessage {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 24px;
+            color: #333;
+        }
+        /* Add styles for the main content */
+        #mainContent {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div id="loadingMessage">Welcome to SimplyBot!!!</div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent">
+        <h1>Simplybot</h1>
+        <div id="response"></div>
+        <form id="chatForm">
+            <input type="text" id="message" placeholder="Type your message here..." required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script>
+        // JavaScript to hide the loading screen and show the main content
+        window.addEventListener('load', function() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const mainContent = document.getElementById('mainContent');
+
+            // Simulate a delay before hiding the loading screen
+            setTimeout(function() {
+                loadingScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+            }, 1000); // Adjust the delay as needed
+        });
+
+        // JavaScript for chat functionality
+        const MAX_MESSAGES = 5;
+
+        document.getElementById("chatForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const message = document.getElementById("message").value;
+
+            fetch("/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const responseDiv = document.getElementById("response");
+                const userMessage = document.createElement("p");
+                userMessage.textContent = "You: " + message;
+                userMessage.classList.add("user-message");
+                const botMessage = document.createElement("p");
+                botMessage.textContent = "Bot: " + data.response;
+                botMessage.classList.add("bot-message");
+                
+                responseDiv.appendChild(userMessage);
+                responseDiv.appendChild(botMessage);
+                document.getElementById("message").value = ""; // Clear input
+
+                // Remove old messages
+                const messages = responseDiv.getElementsByTagName("p");
+                if (messages.length > MAX_MESSAGES * 2) {
+                    responseDiv.removeChild(messages[0]);
+                    responseDiv.removeChild(messages[0]);
+                }
+
+                responseDiv.scrollTop = responseDiv.scrollHeight; // Auto-scroll
+            });
+        });
+
+        //Scroll message
+        $(document).ready(function() {
+        $('#send-button').click(function() {
+            var userInput = $('#user-input').val();
+            if (userInput.trim() === '') {
+                return;
+            }
+            $('#messages').append('<p><strong>You:</strong> ' + userInput + '</p>');
+            $('#user-input').val('');
+
+            $.ajax({
+                url: '/chat',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ message: userInput }),
+                success: function(response) {
+                    $('#messages').append('<p><strong>Bot:</strong> ' + response.response + '</p>');
+                    $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                }
+            });
+        });
+
+        $('#user-input').keypress(function(e) {
+            if (e.which === 13) {
+                $('#send-button').click();
+            }
+        });
+    });
+    </script>
+</body>
+</html>
